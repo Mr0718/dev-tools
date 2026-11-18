@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="color-scheme" content="light dark"/>
+<link rel="icon" href="data:,"/>
+<title>开发者工具箱</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#f4f5f3; --card:#ffffff; --card2:#f9faf8; --ink:#101613; --muted:#6b7570; --line:#e2e6e2;
+  --accent:#0e6b4f; --accent2:#e8f3ee; --dark:#0f1a15; --amber:#b45309; --red:#dc2626; --radius:16px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0c100e; --card:#151a17; --card2:#1a201c; --ink:#e8edea; --muted:#9aa8a1; --line:#262e29; --accent:#34d399; --accent2:#132a21; --dark:#e8edea; }
+}
+*{box-sizing:border-box} body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.6}
+a{color:var(--accent)} button,input,select,textarea{font:inherit}
+button,[role="button"],select,summary,input:not([type="checkbox"]){min-height:38px}
+.top{max-width:1120px;margin:0 auto;padding:28px 20px 0}
+.eyebrow{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.eyebrow i{display:inline-flex;width:36px;height:36px;background:var(--dark);color:#fff;border-radius:9px;align-items:center;justify-content:center;font-style:normal;letter-spacing:0}
+@media (prefers-color-scheme: dark){.eyebrow i{background:var(--accent);color:#06281d}}
+h1{font-size:42px;line-height:1.05;margin:14px 0 10px;letter-spacing:-.02em;font-weight:900}
+@media(max-width:600px){h1{font-size:32px}}
+.sub{color:var(--muted);max-width:640px;font-size:16px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600}
+.stat b{color:var(--accent)}
+.searchbar{display:flex;gap:10px;margin:6px 0 14px}
+.searchbar input{flex:1;padding:12px 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:15px;outline:none}
+.searchbar input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2)}
+.cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.cat{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 16px;border-radius:999px;cursor:pointer;font-weight:600;font-size:14px}
+.cat.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+@media (prefers-color-scheme: dark){.cat.active{background:var(--accent);color:#06281d;border-color:var(--accent)}}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px 20px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.grid{grid-template-columns:1fr 1fr;gap:10px}}
+.tool-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;cursor:pointer;text-align:left;width:100%;color:var(--ink)}
+.tool-card:hover{border-color:var(--accent)}
+.tool-card.active{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2)}
+.tool-card .ic{font-size:22px;width:44px;height:44px;background:var(--accent2);border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.tool-card h3{margin:0 0 4px;font-size:16px}
+.tool-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+.tag{font-size:11px;font-weight:700;color:var(--accent);background:var(--accent2);padding:2px 8px;border-radius:999px;float:right}
+/* workspace */
+.workspace{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px}
+.workspace h2{margin:0 0 4px;font-size:22px}
+.workspace .desc{color:var(--muted);font-size:14px;margin:0 0 16px}
+.panel{display:none}.panel.show{display:block}
+label.fl{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}
+textarea.ta,input.in,select.sel{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:var(--card2);color:var(--ink);outline:none}
+textarea.ta{font-family:var(--mono);font-size:13.5px;min-height:120px;resize:vertical}
+textarea.ta:focus,input.in:focus{border-color:var(--accent)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>*{flex:0 0 auto}
+.grow{flex:1 1 200px !important}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 16px;border-radius:999px;cursor:pointer;font-weight:700;font-size:14px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (prefers-color-scheme: dark){.btn.primary{color:#06281d}}
+.btn:active{transform:scale(.98)}
+.out{background:#0f1a15;color:#d1fae5;border-radius:12px;padding:14px;font-family:var(--mono);font-size:13px;white-space:pre-wrap;word-break:break-all;min-height:52px;margin-top:12px}
+@media (prefers-color-scheme: dark){.out{background:#0a0f0c;border:1px solid var(--line)}}
+.out:empty::before{content:"结果会显示在这里";color:#6b7d74}
+.hint{font-size:12.5px;color:var(--muted);margin-top:8px}
+.err{color:var(--red);font-weight:600;font-size:13.5px;margin-top:8px}
+.okmsg{color:var(--accent);font-weight:600;font-size:13.5px;margin-top:8px}
+input[type=range]{accent-color:var(--accent);min-height:38px}
+.chk{display:inline-flex;align-items:center;gap:7px;padding:8px 4px;font-size:14px;cursor:pointer}
+.chk input{width:18px;height:18px;accent-color:var(--accent)}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+@media(max-width:560px){.kv{grid-template-columns:1fr}}
+.kv div{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kv b{display:block;font-size:12px;color:var(--muted);margin-bottom:2px}
+.kv span{font-family:var(--mono);font-size:13.5px;word-break:break-all}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:26px;text-align:center;color:var(--muted);cursor:pointer}
+.drop:hover{border-color:var(--accent)}
+img.prev{max-width:100%;border-radius:12px;border:1px solid var(--line)}
+.swatch{width:100%;height:110px;border-radius:14px;border:1px solid var(--line)}
+.score{font-size:36px;font-weight:900}
+.check li{margin:6px 0}
+footer{max-width:1120px;margin:0 auto;padding:10px 20px 36px;color:var(--muted);font-size:13px}
+.deploy{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px}
+.deploy code{font-family:var(--mono);background:var(--card2);padding:2px 7px;border-radius:6px;font-size:12.5px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:#101613;color:#fff;padding:11px 20px;border-radius:999px;font-weight:700;font-size:14px;transition:.25s;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="eyebrow"><i>&lt;/&gt;</i> DevTools · 本地运行 · 无需注册</div>
+  <h1>开发者工具箱</h1>
+  <p class="sub">常用的编码、生成、格式化小工具合集。无需注册、无需下载：除二维码生成需联网加载一个小库外，其余处理都在你自己的浏览器里完成，不上传服务器——保存这一页就能自己部署。</p>
+  <div class="stats"><span class="stat"><b>14</b> 个工具</span><span class="stat"><b>0</b> 注册 / 登录</span><span class="stat"><b>无需</b> 后端服务器</span><span class="stat">支持深色模式</span></div>
+  <div class="searchbar"><input id="search" type="search" placeholder="搜索工具：JSON、密码、二维码、图片压缩…" aria-label="搜索工具"></div>
+  <nav class="cats" id="cats">
+    <button class="cat active" data-cat="all">全部</button>
+    <button class="cat" data-cat="code">编码转换</button>
+    <button class="cat" data-cat="gen">生成器</button>
+    <button class="cat" data-cat="text">文本与图像</button>
+    <button class="cat" data-cat="site">站点检查</button>
+  </nav>
+</header>
+
+<main class="wrap">
+  <div class="grid" id="grid"></div>
+
+  <section class="workspace" id="workspace">
+    <h2 id="wsTitle">JSON 格式化</h2>
+    <p class="desc" id="wsDesc">粘贴 JSON，一键格式化、压缩或验证。</p>
+
+    <!-- JSON -->
+    <div class="panel show" data-panel="json">
+      <textarea class="ta" id="jsonIn" placeholder='{"name":"demo","tags":["dev","tools"],"ok":true}'>{"name":"demo","tags":["dev","tools"],"ok":true}</textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" onclick="jsonFmt(2)">格式化</button>
+        <button class="btn" onclick="jsonFmt(0)">压缩</button>
+        <button class="btn" onclick="jsonValidate()">仅验证</button>
+        <button class="btn" onclick="copyEl('jsonOut')">复制结果</button>
+        <button class="btn" onclick="document.getElementById('jsonIn').value='';document.getElementById('jsonOut').textContent=''">清空</button>
+      </div>
+      <div id="jsonMsg"></div>
+      <pre class="out" id="jsonOut"></pre>
+    </div>
+
+    <!-- Base64 -->
+    <div class="panel" data-panel="base64">
+      <textarea class="ta" id="b64In" placeholder="输入要编码的文字，或要解码的 Base64 字符串">你好，开发者工具箱</textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" onclick="b64(true)">编码 →</button>
+        <button class="btn" onclick="b64(false)">← 解码</button>
+        <button class="btn" onclick="swapIO('b64In','b64Out')">交换</button>
+        <button class="btn" onclick="copyEl('b64Out')">复制结果</button>
+      </div>
+      <div id="b64Msg"></div><pre class="out" id="b64Out"></pre>
+      <p class="hint">支持中文等 Unicode 字符（UTF-8 编码）。</p>
+    </div>
+
+    <!-- URL -->
+    <div class="panel" data-panel="url">
+      <textarea class="ta" id="urlIn" placeholder="输入 URL 或参数">https://example.com/search?q=开发者 工具箱&page=1</textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" onclick="urlTool('enc')">URL 编码</button>
+        <button class="btn" onclick="urlTool('dec')">URL 解码</button>
+        <button class="btn" onclick="urlTool('parse')">解析参数</button>
+        <button class="btn" onclick="copyEl('urlOut')">复制结果</button>
+      </div>
+      <div id="urlMsg"></div><pre class="out" id="urlOut"></pre>
+    </div>
+
+    <!-- Timestamp -->
+    <div class="panel" data-panel="time">
+      <div class="row"><span>当前时间戳（秒）：</span><b id="nowTs" style="font-family:var(--mono)"></b><button class="btn" onclick="copyText(document.getElementById('nowTs').textContent)">复制</button></div>
+      <label class="fl">时间戳 → 日期</label>
+      <div class="row"><input class="in grow" id="tsIn" placeholder="如 1795006809 或毫秒 1795006809000"><select class="sel" id="tsUnit"><option value="auto">自动判断</option><option value="s">秒</option><option value="ms">毫秒</option></select><button class="btn primary" onclick="tsToDate()">转换</button></div>
+      <label class="fl">日期 → 时间戳</label>
+      <div class="row"><input class="in grow" id="dateIn" type="datetime-local"><button class="btn primary" onclick="dateToTs()">转换</button></div>
+      <pre class="out" id="timeOut"></pre>
+    </div>
+
+    <!-- Password -->
+    <div class="panel" data-panel="password">
+      <label class="fl">长度：<span id="pwLenVal">20</span> 位</label>
+      <input type="range" id="pwLen" min="8" max="64" value="20" style="width:100%" oninput="document.getElementById('pwLenVal').textContent=this.value">
+      <div class="row">
+        <label class="chk"><input type="checkbox" id="pwUpper" checked> 大写 A-Z</label>
+        <label class="chk"><input type="checkbox" id="pwLower" checked> 小写 a-z</label>
+        <label class="chk"><input type="checkbox" id="pwNum" checked> 数字 0-9</label>
+        <label class="chk"><input type="checkbox" id="pwSym" checked> 符号 !@#$</label>
+        <label class="chk"><input type="checkbox" id="pwNoAmb"> 去除易混淆字符 (0/O/l/1)</label>
+      </div>
+      <div class="row" style="margin-top:8px"><button class="btn primary" onclick="genPw()">生成密码</button><button class="btn" onclick="copyEl('pwOut')">复制</button></div>
+      <pre class="out" id="pwOut"></pre>
+      <p class="hint" id="pwHint">使用浏览器加密级随机数（crypto.getRandomValues）生成。密码不会离开你的设备，请自行保存到密码管理器。</p>
+    </div>
+
+    <!-- UUID -->
+    <div class="panel" data-panel="uuid">
+      <div class="row"><label class="chk">数量 <input class="in" id="uuidCount" type="number" value="5" min="1" max="100" style="width:90px"></label>
+      <label class="chk"><input type="checkbox" id="uuidUpper"> 大写</label>
+      <label class="chk"><input type="checkbox" id="uuidNoDash"> 无连字符</label>
+      <button class="btn primary" onclick="genUuid()">生成 UUID v4</button><button class="btn" onclick="copyEl('uuidOut')">复制全部</button></div>
+      <pre class="out" id="uuidOut"></pre>
+    </div>
+
+    <!-- Hash -->
+    <div class="panel" data-panel="hash">
+      <textarea class="ta" id="hashIn" placeholder="输入任意文本，实时计算哈希" oninput="calcHash()">hello world</textarea>
+      <div class="kv">
+        <div><b>SHA-1</b><span id="h1">—</span></div>
+        <div><b>SHA-256</b><span id="h256">—</span></div>
+        <div><b>SHA-384</b><span id="h384">—</span></div>
+        <div><b>SHA-512</b><span id="h512">—</span></div>
+      </div>
+      <p class="hint">通过浏览器 Web Crypto API 计算，适合校验文件指纹、调试签名逻辑（哈希不可逆，不能用于“破解”密码）。</p>
+    </div>
+
+    <!-- Address -->
+    <div class="panel" data-panel="address">
+      <div class="row"><select class="sel" id="addrCountry"><option value="cn">中国 · 测试地址</option><option value="us">United States · Test address</option><option value="uk">United Kingdom</option><option value="jp">日本</option></select>
+      <button class="btn primary" onclick="genAddr()">生成一条</button><button class="btn" onclick="copyEl('addrOut')">复制</button></div>
+      <pre class="out" id="addrOut"></pre>
+      <p class="hint">⚠️ 全部为随机拼凑的虚构测试数据，仅供开发时填充表单、测试地址校验逻辑，不能用于真实收货或注册。</p>
+    </div>
+
+    <!-- QR -->
+    <div class="panel" data-panel="qr">
+      <label class="fl">内容（网址或文本）</label>
+      <input class="in" id="qrIn" value="https://example.com" placeholder="https://…">
+      <div class="row" style="margin-top:12px"><select class="sel" id="qrSize"><option value="160">160 × 160</option><option value="240" selected>240 × 240</option><option value="360">360 × 360</option></select>
+      <button class="btn primary" onclick="genQr()">生成二维码</button></div>
+      <div id="qrBox" style="margin-top:16px;background:#fff;display:inline-block;padding:14px;border-radius:14px;border:1px solid var(--line)"></div>
+      <p class="hint">生成后可长按 / 右键保存图片。内容过长时二维码会变密，建议缩短链接。</p>
+    </div>
+
+    <!-- Text -->
+    <div class="panel" data-panel="text">
+      <textarea class="ta" id="textIn" placeholder="粘贴文本…" oninput="textStats()">Hello World，这是一个文本工具示例。</textarea>
+      <div class="kv">
+        <div><b>字符数</b><span id="tChars">0</span></div><div><b>不含空格</b><span id="tNoSpace">0</span></div>
+        <div><b>单词 / 词数</b><span id="tWords">0</span></div><div><b>行数</b><span id="tLines">0</span></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" onclick="textCase('upper')">转大写</button><button class="btn" onclick="textCase('lower')">转小写</button>
+        <button class="btn" onclick="textCase('title')">首字母大写</button><button class="btn" onclick="textCase('trim')">去多余空格/空行</button>
+        <button class="btn" onclick="copyEl('textIn')">复制文本</button>
+      </div>
+    </div>
+
+    <!-- Image -->
+    <div class="panel" data-panel="image">
+      <div class="drop" id="drop" onclick="document.getElementById('imgFile').click()">点击选择或把图片拖到这里<br><small>JPG / PNG / WebP，本地压缩不上传</small></div>
+      <input type="file" id="imgFile" accept="image/*" hidden>
+      <label class="fl">质量：<span id="qVal">80</span>%（越低文件越小）</label>
+      <input type="range" id="imgQ" min="10" max="95" value="80" style="width:100%" oninput="document.getElementById('qVal').textContent=this.value;compressImg()">
+      <label class="fl">最大宽度（px，0 = 不缩放）</label>
+      <input class="in" id="imgW" type="number" value="1920" min="0" step="100" onchange="compressImg()">
+      <div id="imgInfo" style="margin-top:12px"></div>
+      <div class="row" style="margin-top:10px;align-items:flex-start">
+        <div style="flex:1;min-width:200px"><b style="font-size:13px">原图</b><br><img class="prev" id="imgOrig" alt="原图预览"></div>
+        <div style="flex:1;min-width:200px"><b style="font-size:13px">压缩后</b><br><img class="prev" id="imgComp" alt="压缩后预览"></div>
+      </div>
+      <a class="btn primary" id="imgDl" style="display:none;margin-top:14px;text-decoration:none" download="compressed.jpg">⬇ 下载压缩图</a>
+    </div>
+
+    <!-- Color -->
+    <div class="panel" data-panel="color">
+      <div class="row"><input type="color" id="colorPick" value="#0e6b4f" style="width:72px;height:48px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--card)" oninput="colorUpdate()"><input class="in grow" id="colorHex" value="#0e6b4f" oninput="colorFromHex()"></div>
+      <div class="swatch" id="swatch" style="background:#0e6b4f;margin-top:14px"></div>
+      <div class="kv">
+        <div><b>HEX（点击复制）</b><span id="cHex" onclick="copyText(this.textContent)" style="cursor:pointer">#0E6B4F</span></div>
+        <div><b>RGB</b><span id="cRgb" onclick="copyText(this.textContent)" style="cursor:pointer">rgb(14,107,79)</span></div>
+        <div><b>HSL</b><span id="cHsl" onclick="copyText(this.textContent)" style="cursor:pointer">hsl(162,77%,24%)</span></div>
+        <div><b>深 / 浅变体</b><span id="cVar">—</span></div>
+      </div>
+    </div>
+
+    <!-- Temp mail -->
+    <div class="panel" data-panel="mail">
+      <div style="background:var(--accent2);border-radius:12px;padding:14px;font-size:14px">
+        <b>为什么这个工具和别的不一样？</b><br>
+        真正的临时邮箱必须有一台邮件服务器实时收信，纯静态网页做不到——所以这里不假装提供收件箱。下面给你两个能自己部署的替代用法：
+      </div>
+      <label class="fl">用法一：用你自己的域名生成随机别名（配合域名的 Catch-all / 全收转发）</label>
+      <div class="row"><input class="in grow" id="mailDomain" placeholder="填你的域名，如 example.com" value="example.com"><button class="btn primary" onclick="genAlias()">生成别名邮箱</button><button class="btn" onclick="copyEl('mailOut')">复制</button></div>
+      <pre class="out" id="mailOut"></pre>
+      <p class="hint">在 Cloudflare Email Routing、域名邮箱服务里开启 Catch-all 后，发到这个随机地址的邮件都会转到你的真实邮箱，注册测试账号时每个站用一个，泄露了也能单独停用。</p>
+      <label class="fl">用法二：自建临时邮箱服务（需要一台服务器）</label>
+      <p class="hint" style="font-size:13.5px;color:var(--ink)">开源方案可搜：<b>Cloudflare Temp Email</b>（跑在 Workers + D1，免费额度够个人用）、<b>Moemail</b>、<b>TempMail 自建版</b>。部署好后把入口链接放到这里的位置即可，和本站其余静态工具互不影响。</p>
+    </div>
+
+    <!-- SEO -->
+    <div class="panel" data-panel="seo">
+      <p class="hint" style="margin-top:0">把网页的 HTML 源码粘贴进来（或只填下面两项），做一次基础 SEO 体检：标题、描述、标题层级、图片 alt、链接数量。</p>
+      <label class="fl">页面标题 Title</label><input class="in" id="seoTitle" placeholder="建议 15–35 个汉字">
+      <label class="fl">页面描述 Meta Description</label><textarea class="ta" id="seoDesc" style="min-height:64px" placeholder="建议 70–150 个汉字"></textarea>
+      <label class="fl">HTML 源码（可选）</label><textarea class="ta" id="seoHtml" style="min-height:90px" placeholder="<html><head>…"></textarea>
+      <div class="row" style="margin-top:12px"><button class="btn primary" onclick="seoCheck()">开始检查</button></div>
+      <div id="seoOut" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <div class="deploy">
+    <b>🛠 自己部署</b>
+    <p style="margin:6px 0;color:var(--muted);font-size:14px">本站是单个静态 HTML 文件，无后端、无数据库。保存本页为 <code>index.html</code>，丢到任意静态托管即可：GitHub Pages、Cloudflare Pages、Netlify、Vercel，或自己的 Nginx / Apache。除二维码外其余工具断网也能用；二维码需联网加载一次 qrcodejs 库，自己部署时也可把该库下载到本地同目录引用。</p>
+  </div>
+</main>
+<footer>开发者工具箱 · 仅收录合法的开发与效率工具：编码转换、格式化、随机测试数据、图片与颜色处理、SEO 基础检查。所有数据只在本机处理。</footer>
+<div class="toast" id="toast">已复制</div>
+
+<script>
+var TOOLS=[
+ {id:'json',cat:'code',icon:'{ }',name:'JSON 格式化',desc:'格式化、压缩、验证 JSON，定位语法错误',tag:'最常用'},
+ {id:'base64',cat:'code',icon:'⇄',name:'Base64 编解码',desc:'文本与 Base64 互转，支持中文 UTF-8'},
+ {id:'url',cat:'code',icon:'🔗',name:'URL 编解码',desc:'encode / decode，并解析查询参数'},
+ {id:'time',cat:'code',icon:'🕐',name:'时间戳转换',desc:'Unix 时间戳与日期时间互转，实时秒数'},
+ {id:'hash',cat:'code',icon:'#',name:'哈希计算',desc:'SHA-1 / 256 / 384 / 512，Web Crypto 计算'},
+ {id:'password',cat:'gen',icon:'🔑',name:'密码生成器',desc:'加密级随机强密码，可调长度与字符集',tag:'安全'},
+ {id:'uuid',cat:'gen',icon:'⬡',name:'UUID 生成器',desc:'批量生成 UUID v4，可去连字符'},
+ {id:'address',cat:'gen',icon:'📍',name:'随机测试地址',desc:'虚构地址填充表单测试，中/美/英/日'},
+ {id:'qr',cat:'gen',icon:'▦',name:'二维码生成',desc:'网址或文本一键生成二维码图片'},
+ {id:'text',cat:'text',icon:'Aa',name:'文本工具',desc:'字数统计、大小写转换、去多余空格'},
+ {id:'image',cat:'text',icon:'🖼',name:'图片压缩',desc:'本地压缩 JPG/PNG，可调质量与尺寸'},
+ {id:'color',cat:'text',icon:'🎨',name:'颜色转换',desc:'HEX / RGB / HSL 互转，取色与变体'},
+ {id:'seo',cat:'site',icon:'◎',name:'SEO 基础检查',desc:'标题、描述、H 标签、alt 与链接体检'},
+ {id:'mail',cat:'site',icon:'✉',name:'临时邮箱（说明）',desc:'需邮件服务器，附自建方案与域名别名生成',tag:'需后端'},
+];
+var grid=document.getElementById('grid');
+function renderGrid(filter,cat){
+ grid.innerHTML='';
+ TOOLS.filter(function(t){return (cat==='all'||t.cat===cat)&&(!filter||(t.name+t.desc).toLowerCase().indexOf(filter.toLowerCase())>-1)}).forEach(function(t){
+   var b=document.createElement('button');b.className='tool-card';b.dataset.id=t.id;
+   b.innerHTML=(t.tag?'<span class="tag">'+t.tag+'</span>':'')+'<span class="ic">'+t.icon+'</span><h3>'+t.name+'</h3><p>'+t.desc+'</p>';
+   b.onclick=function(){openTool(t.id)};grid.appendChild(b);
+ });
+ if(!grid.children.length)grid.innerHTML='<p style="color:var(--muted)">没有找到匹配的工具，换个关键词试试。</p>';
+ markActive();
+}
+function markActive(){document.querySelectorAll('.tool-card').forEach(function(c){c.classList.toggle('active',c.dataset.id===current)})}
+var current='json';
+function openTool(id){
+ current=id;
+ document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('show',p.dataset.panel===id)});
+ var t=TOOLS.find(function(x){return x.id===id});
+ document.getElementById('wsTitle').textContent=t.name;
+ document.getElementById('wsDesc').textContent=t.desc+'。所有处理都在本地完成。';
+ markActive();
+ document.getElementById('workspace').scrollIntoView({behavior:'smooth',block:'start'});
+ if(id==='hash')calcHash(); if(id==='qr')genQr(); if(id==='uuid'&&!document.getElementById('uuidOut').textContent)genUuid();
+ if(id==='address'&&!document.getElementById('addrOut').textContent)genAddr(); if(id==='password'&&!document.getElementById('pwOut').textContent)genPw();
+ if(id==='text')textStats();
+}
+document.getElementById('search').addEventListener('input',function(e){renderGrid(e.target.value,document.querySelector('.cat.active').dataset.cat)});
+document.getElementById('cats').addEventListener('click',function(e){if(!e.target.dataset.cat)return;document.querySelectorAll('.cat').forEach(function(c){c.classList.remove('active')});e.target.classList.add('active');renderGrid(document.getElementById('search').value,e.target.dataset.cat)});
+renderGrid('','all');
+
+/* helpers */
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg||'已复制';t.classList.add('show');setTimeout(function(){t.classList.remove('show')},1600)}
+function copyText(s){if(!s)return;if(navigator.clipboard)navigator.clipboard.writeText(s).then(function(){toast()});else toast('请手动复制')}
+function copyEl(id){var el=document.getElementById(id);copyText(el.value!==undefined&&el.tagName!=='PRE'?el.value:el.textContent)}
+function swapIO(a,b){var x=document.getElementById(a),y=document.getElementById(b);var t=x.value;x.value=y.textContent;y.textContent=t}
+function msg(id,txt,ok){var el=document.getElementById(id);el.innerHTML=txt?'<div class="'+(ok?'okmsg':'err')+'">'+txt+'</div>':''}
+
+/* JSON */
+function jsonFmt(indent){var v=document.getElementById('jsonIn').value;try{var o=JSON.parse(v);document.getElementById('jsonOut').textContent=indent?JSON.stringify(o,null,2):JSON.stringify(o);msg('jsonMsg','✓ JSON 合法'+(Array.isArray(o)?'，数组共 '+o.length+' 项':'')+'',1)}catch(e){msg('jsonMsg','✗ '+e.message,0);document.getElementById('jsonOut').textContent=''}}
+function jsonValidate(){try{JSON.parse(document.getElementById('jsonIn').value);msg('jsonMsg','✓ JSON 合法，可以放心使用',1)}catch(e){msg('jsonMsg','✗ '+e.message,0)}}
+
+/* Base64 */
+function b64(enc){var v=document.getElementById('b64In').value;try{if(enc){var bytes=new TextEncoder().encode(v);var bin='';bytes.forEach(function(x){bin+=String.fromCharCode(x)});document.getElementById('b64Out').textContent=btoa(bin)}else{var bin2=atob(v.trim());var arr=Uint8Array.from(bin2,function(c){return c.charCodeAt(0)});document.getElementById('b64Out').textContent=new TextDecoder().decode(arr)}msg('b64Msg','',1)}catch(e){msg('b64Msg','✗ 输入不是有效的 Base64 字符串',0)}}
+
+/* URL */
+function urlTool(m){var v=document.getElementById('urlIn').value.trim();try{if(m==='enc')document.getElementById('urlOut').textContent=encodeURIComponent(v);else if(m==='dec')document.getElementById('urlOut').textContent=decodeURIComponent(v);else{var u=new URL(v);var lines=['协议: '+u.protocol,'域名: '+u.host,'路径: '+u.pathname,'','— 查询参数 —'];u.searchParams.forEach(function(val,k){lines.push(k+' = '+val)});if(lines.length===5)lines.push('（无参数）');document.getElementById('urlOut').textContent=lines.join('\n')}msg('urlMsg','',1)}catch(e){msg('urlMsg','✗ '+(m==='parse'?'请输入完整网址，如 https://example.com?a=1':'编码/解码失败：'+e.message),0)}}
+
+/* Time */
+setInterval(function(){document.getElementById('nowTs').textContent=Math.floor(Date.now()/1000)},500);
+function tsToDate(){var v=document.getElementById('tsIn').value.trim();var unit=document.getElementById('tsUnit').value;var n=Number(v);if(!v||isNaN(n)){document.getElementById('timeOut').textContent='请输入数字时间戳';return}var ms=unit==='ms'?n:unit==='s'?n*1000:(n>1e12?n:n*1000);var d=new Date(ms);document.getElementById('timeOut').textContent='本地时间：'+d.toLocaleString('zh-CN',{hour12:false})+'\nISO 格式：'+d.toISOString()+'\n星期：'+'日一二三四五六'[d.getDay()]}
+function dateToTs(){var v=document.getElementById('dateIn').value;if(!v){document.getElementById('timeOut').textContent='请先选择日期时间';return}var ms=new Date(v).getTime();document.getElementById('timeOut').textContent='秒：'+Math.floor(ms/1000)+'\n毫秒：'+ms}
+
+/* Password */
+function genPw(){var len=+document.getElementById('pwLen').value;var sets='';if(document.getElementById('pwUpper').checked)sets+='ABCDEFGHJKLMNPQRSTUVWXYZ';if(document.getElementById('pwLower').checked)sets+='abcdefghijkmnpqrstuvwxyz';if(document.getElementById('pwNum').checked)sets+='23456789';if(document.getElementById('pwSym').checked)sets+='!@#$%^&*()-_=+[]{}<>?';if(!document.getElementById('pwNoAmb').checked){if(document.getElementById('pwUpper').checked)sets+='IO';if(document.getElementById('pwLower').checked)sets+='lo';if(document.getElementById('pwNum').checked)sets+='01'}if(!sets){document.getElementById('pwOut').textContent='请至少勾选一种字符类型';return}var arr=new Uint32Array(len);crypto.getRandomValues(arr);var out='';for(var i=0;i<len;i++)out+=sets[arr[i]%sets.length];document.getElementById('pwOut').textContent=out;var bits=Math.round(len*Math.log2(sets.length));document.getElementById('pwHint').textContent='强度：约 '+bits+' bit 熵（'+(bits>=80?'很强':bits>=60?'强':'一般，建议加长')+'）。使用加密级随机数生成，不会离开你的设备。'}
+
+/* UUID */
+function genUuid(){var n=Math.min(100,Math.max(1,+document.getElementById('uuidCount').value||1));var out=[];for(var i=0;i<n;i++){var u=crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=crypto.getRandomValues(new Uint8Array(1))[0]%16;var v=c==='x'?r:(r&0x3|0x8);return v.toString(16)});if(document.getElementById('uuidNoDash').checked)u=u.replace(/-/g,'');if(document.getElementById('uuidUpper').checked)u=u.toUpperCase();out.push(u)}document.getElementById('uuidOut').textContent=out.join('\n')}
+
+/* Hash */
+function calcHash(){var v=document.getElementById('hashIn').value;var data=new TextEncoder().encode(v);['SHA-1','SHA-256','SHA-384','SHA-512'].forEach(function(alg,i){crypto.subtle.digest(alg,data).then(function(buf){var hex=Array.from(new Uint8Array(buf)).map(function(x){return x.toString(16).padStart(2,'0')}).join('');document.getElementById(['h1','h256','h384','h512'][i]).textContent=hex})})}
+
+/* Address */
+var ADDR={
+ cn:{names:['王小明','李晓华','张伟','刘洋','陈静','杨帆'],roads:['中山路','人民大道','解放路','建设街','文化路','和平街'],cities:[['上海市','黄浦区','200001'],['北京市','朝阳区','100020'],['广州市','天河区','510630'],['深圳市','南山区','518000'],['成都市','锦江区','610000'],['杭州市','西湖区','310000']]},
+ us:{names:['James Smith','Mary Johnson','Robert Lee','Patricia Brown','Michael Davis'],roads:['Main St','Oak Avenue','Maple Drive','Cedar Lane','Washington Blvd'],cities:[['Springfield','IL','62701'],['Austin','TX','73301'],['Denver','CO','80201'],['Portland','OR','97201'],['Madison','WI','53703']]},
+ uk:{names:['Oliver Taylor','Amelia Wilson','George Thomas','Isla Roberts'],roads:['High Street','Station Road','Church Lane','Victoria Road'],cities:[['London','','SW1A 1AA'],['Manchester','','M1 1AE'],['Bristol','','BS1 4ST'],['Leeds','','LS1 4DY']]},
+ jp:{names:['佐藤健','鈴木花','高橋翔','田中美咲'],roads:['中央通り','駅前通り','桜通り'],cities:[['東京都','新宿区','160-0022'],['大阪府','大阪市北区','530-0001'],['福岡県','福岡市博多区','812-0011']]}
+};
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function genAddr(){var c=document.getElementById('addrCountry').value;var d=ADDR[c];var city=pick(d.cities);var num=1+Math.floor(Math.random()*900);var phone=c==='cn'?('1'+pick(['3','5','7','8','9'])+Math.floor(100000000+Math.random()*899999999)):c==='us'?('+1 ('+(200+Math.floor(Math.random()*700))+') 555-01'+(10+Math.floor(Math.random()*89))):c==='uk'?('07'+Math.floor(100000000+Math.random()*899999999)):('090-'+Math.floor(1000+Math.random()*9000)+'-'+Math.floor(1000+Math.random()*9000));
+ var lines=['姓名：'+pick(d.names),'地址：'+city[0]+' '+city[1]+' '+pick(d.roads)+' '+num+' 号','邮编：'+city[2],'电话：'+phone];
+ if(c==='us')lines=['Name: '+pick(d.names),'Address: '+num+' '+pick(d.roads)+', '+city[0]+', '+city[1]+' '+city[2],'Country: United States','Phone: '+phone];
+ document.getElementById('addrOut').textContent=lines.join('\n')}
+
+/* QR */
+function genQr(){var box=document.getElementById('qrBox');box.innerHTML='';var txt=document.getElementById('qrIn').value||' ';var size=+document.getElementById('qrSize').value;if(typeof QRCode==='undefined'){box.innerHTML='<span style="color:#333;font-size:13px">二维码库加载失败，请检查网络后刷新页面。</span>';return}new QRCode(box,{text:txt,width:size,height:size,correctLevel:QRCode.CorrectLevel.M})}
+
+/* Text */
+function textStats(){var v=document.getElementById('textIn').value;document.getElementById('tChars').textContent=v.length;document.getElementById('tNoSpace').textContent=v.replace(/\s/g,'').length;document.getElementById('tWords').textContent=(v.trim()?v.trim().split(/\s+/).length:0);document.getElementById('tLines').textContent=v?v.split('\n').length:0}
+function textCase(m){var el=document.getElementById('textIn');var v=el.value;if(m==='upper')v=v.toUpperCase();else if(m==='lower')v=v.toLowerCase();else if(m==='title')v=v.replace(/\b\w/g,function(c){return c.toUpperCase()});else if(m==='trim')v=v.split('\n').map(function(l){return l.trim().replace(/\s+/g,' ')}).filter(Boolean).join('\n');el.value=v;textStats()}
+
+/* Image */
+var imgFileObj=null;
+document.getElementById('imgFile').addEventListener('change',function(e){if(e.target.files[0])loadImg(e.target.files[0])});
+var drop=document.getElementById('drop');drop.addEventListener('dragover',function(e){e.preventDefault()});drop.addEventListener('drop',function(e){e.preventDefault();if(e.dataTransfer.files[0])loadImg(e.dataTransfer.files[0])});
+function fmtSize(b){return b>1048576?(b/1048576).toFixed(2)+' MB':(b/1024).toFixed(1)+' KB'}
+function loadImg(f){imgFileObj=f;document.getElementById('imgOrig').src=URL.createObjectURL(f);compressImg()}
+function compressImg(){if(!imgFileObj)return;var img=new Image();img.onload=function(){var mw=+document.getElementById('imgW').value||0;var scale=mw&&img.width>mw?mw/img.width:1;var cv=document.createElement('canvas');cv.width=Math.round(img.width*scale);cv.height=Math.round(img.height*scale);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);var q=(+document.getElementById('imgQ').value)/100;cv.toBlob(function(blob){var url=URL.createObjectURL(blob);document.getElementById('imgComp').src=url;var dl=document.getElementById('imgDl');dl.href=url;dl.style.display='inline-block';var pct=Math.max(0,Math.round((1-blob.size/imgFileObj.size)*100));document.getElementById('imgInfo').innerHTML='原图 <b>'+fmtSize(imgFileObj.size)+'</b>（'+img.width+'×'+img.height+'）→ 压缩后 <b>'+fmtSize(blob.size)+'</b>（'+cv.width+'×'+cv.height+'），体积减少约 <b>'+pct+'%</b>'},'image/jpeg',q)};img.src=URL.createObjectURL(imgFileObj)}
+
+/* Color */
+function hexToRgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(function(c){return c+c}).join('');var n=parseInt(h,16);return[(n>>16)&255,(n>>8)&255,n&255]}
+function colorUpdate(){var hex=document.getElementById('colorPick').value;document.getElementById('colorHex').value=hex;paintColor(hex)}
+function colorFromHex(){var v=document.getElementById('colorHex').value.trim();if(/^#?[0-9a-fA-F]{6}$/.test(v)||/^#?[0-9a-fA-F]{3}$/.test(v)){if(v[0]!=='#')v='#'+v;document.getElementById('colorPick').value=v.length===7?v:document.getElementById('colorPick').value;paintColor(v)}}
+function paintColor(hex){var rgb=hexToRgb(hex);document.getElementById('swatch').style.background=hex;document.getElementById('cHex').textContent=hex.toUpperCase();document.getElementById('cRgb').textContent='rgb('+rgb.join(', ')+')';var r=rgb[0]/255,g=rgb[1]/255,b=rgb[2]/255;var mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2;var s=mx===mn?0:(l>0.5?(mx-mn)/(2-mx-mn):(mx-mn)/(mx+mn));var hue=0;if(mx!==mn){if(mx===r)hue=((g-b)/(mx-mn))%6;else if(mx===g)hue=(b-r)/(mx-mn)+2;else hue=(r-g)/(mx-mn)+4;hue*=60;if(hue<0)hue+=360}document.getElementById('cHsl').textContent='hsl('+Math.round(hue)+', '+Math.round(s*100)+'%, '+Math.round(l*100)+'%)';document.getElementById('cVar').textContent='深 rgb('+rgb.map(function(x){return Math.round(x*0.7)}).join(', ')+') · 浅 rgb('+rgb.map(function(x){return Math.round(x+(255-x)*0.7)}).join(', ')+')'}
+
+/* Temp mail alias */
+function genAlias(){var d=(document.getElementById('mailDomain').value.trim()||'example.com').replace(/^@+/,'').replace(/^https?:\/\//,'');var words=['dev','test','tmp','reg','box','mail','try','lab'];var rand=Math.random().toString(36).slice(2,8);document.getElementById('mailOut').textContent=pick(words)+'.'+rand+'@'+d+'\n（发到此地址的邮件需在域名后台开启 Catch-all 才会转进你的真实邮箱）'}
+
+/* SEO */
+function seoCheck(){var title=document.getElementById('seoTitle').value.trim();var desc=document.getElementById('seoDesc').value.trim();var html=document.getElementById('seoHtml').value;
+ if(html){var m=html.match(/<title[^>]*>([^<]*)<\/title>/i);if(m&&!title)title=m[1].trim();var d=html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i)||html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["']/i);if(d&&!desc)desc=d[1].trim()}
+ var items=[];var score=0,total=0;
+ function add(ok,label,good,bad){total+=20;if(ok)score+=20;items.push('<li>'+(ok?'✅':'⚠️')+' <b>'+label+'</b> — '+(ok?good:bad)+'</li>')}
+ add(title.length>=10&&title.length<=60,'标题长度（当前 '+title.length+' 字）','长度合适，利于完整展示','建议 10–60 字：太短说不清，太长会被截断');
+ add(desc.length>=50&&desc.length<=160,'描述长度（当前 '+desc.length+' 字）','长度合适','建议 50–160 字，并自然包含核心关键词');
+ if(html){var h1=(html.match(/<h1[\s>]/gi)||[]).length;add(h1===1,'H1 数量（'+h1+' 个）','全页只有一个 H1，层级清晰','建议全页只保留一个 H1');
+  var imgs=(html.match(/<img[^>]*>/gi)||[]);var noAlt=imgs.filter(function(t){return !/alt=["'][^"']+["']/.test(t)}).length;add(imgs.length>0&&noAlt===0,'图片 alt（共 '+imgs.length+' 张，缺 alt '+noAlt+' 张）','每张图都有 alt 描述','给图片补上 alt，利于图片搜索与无障碍');
+  var links=(html.match(/<a[^>]+href=/gi)||[]).length;add(links>=3,'链接数量（'+links+' 个）','内链数量基本够用','适当增加相关内链，帮助爬虫发现页面')}
+ else{add(false,'HTML 源码','—','粘贴源码后可额外检查 H1、图片 alt 与链接数量')}
+ var pct=Math.round(score/total*100);
+ document.getElementById('seoOut').innerHTML='<div class="row"><span class="score" style="color:'+(pct>=80?'var(--accent)':pct>=50?'var(--amber)':'var(--red)')+'">'+pct+' 分</span><span style="color:var(--muted)">基础体检（仅供参考，不代表搜索引擎的实际排名规则）</span></div><ul class="check" style="padding-left:20px;margin:10px 0">'+items.join('')+'</ul>'}
+calcHash(); textStats(); paintColor('#0e6b4f');
+</script>
+</body>
+</html>
