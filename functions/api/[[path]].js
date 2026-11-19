@@ -8,6 +8,7 @@ export async function onRequest(context) {
   const ct = context.request.headers.get("Content-Type");
   if (ct) headers.set("Content-Type", ct);
   headers.set("Accept", "application/json");
+  headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36");
   let body = undefined;
   if (context.request.method !== "GET" && context.request.method !== "HEAD") {
     body = await context.request.text();
