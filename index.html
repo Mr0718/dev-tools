@@ -262,16 +262,17 @@ footer{max-width:1120px;margin:0 auto;padding:10px 20px 36px;color:var(--muted);
 
     <!-- Temp mail -->
     <div class="panel" data-panel="mail">
-      <div style="background:var(--accent2);border-radius:12px;padding:14px;font-size:14px">
-        <b>为什么这个工具和别的不一样？</b><br>
-        真正的临时邮箱必须有一台邮件服务器实时收信，纯静态网页做不到——所以这里不假装提供收件箱。下面给你两个能自己部署的替代用法：
-      </div>
-      <label class="fl">用法一：用你自己的域名生成随机别名（配合域名的 Catch-all / 全收转发）</label>
+      <p class="hint" style="margin-top:0">用免费的 mail.tm 服务收信，不用注册。点“生成邮箱”会给你一个随机地址，别人发到这个地址的邮件会出现下面的收件箱里，点一封就能看内容和验证码。只用来收注册验证码、测试邮件，别用它收重要邮件，地址是临时的。</p>
+      <div class="row"><button class="btn primary" onclick="genTempMail()">生成邮箱</button><button class="btn" onclick="copyTempMail()">复制邮箱</button><button class="btn" onclick="refreshInbox()">刷新收件箱</button><label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="mailAuto" onchange="toggleMailAuto(this.checked)"> 每 15 秒自动刷新</label></div>
+      <div class="row" style="margin-top:10px"><input class="in grow" id="mailAddr" placeholder="还没生成邮箱，点上面“生成邮箱”" readonly></div>
+      <p class="hint" id="mailStatus">状态：未生成</p>
+      <div id="mailList" style="margin-top:10px"></div>
+      <div id="mailBody" style="margin-top:12px"></div>
+      <hr style="border:none;border-top:1px solid var(--line);margin:18px 0">
+      <label class="fl">备用：用你自己的域名生成随机别名（配合域名的 Catch-all / 全收转发）</label>
       <div class="row"><input class="in grow" id="mailDomain" placeholder="填你的域名，如 example.com" value="example.com"><button class="btn primary" onclick="genAlias()">生成别名邮箱</button><button class="btn" onclick="copyEl('mailOut')">复制</button></div>
       <pre class="out" id="mailOut"></pre>
       <p class="hint">在 Cloudflare Email Routing、域名邮箱服务里开启 Catch-all 后，发到这个随机地址的邮件都会转到你的真实邮箱，注册测试账号时每个站用一个，泄露了也能单独停用。</p>
-      <label class="fl">用法二：自建临时邮箱服务（需要一台服务器）</label>
-      <p class="hint" style="font-size:13.5px;color:var(--ink)">开源方案可搜：<b>Cloudflare Temp Email</b>（跑在 Workers + D1，免费额度够个人用）、<b>Moemail</b>、<b>TempMail 自建版</b>。部署好后把入口链接放到这里的位置即可，和本站其余静态工具互不影响。</p>
     </div>
 
     <!-- SEO -->
@@ -308,7 +309,7 @@ var TOOLS=[
  {id:'image',cat:'text',icon:'🖼',name:'图片压缩',desc:'本地压缩 JPG/PNG，可调质量与尺寸'},
  {id:'color',cat:'text',icon:'🎨',name:'颜色转换',desc:'HEX / RGB / HSL 互转，取色与变体'},
  {id:'seo',cat:'site',icon:'◎',name:'SEO 基础检查',desc:'标题、描述、H 标签、alt 与链接体检'},
- {id:'mail',cat:'site',icon:'✉',name:'临时邮箱（说明）',desc:'需邮件服务器，附自建方案与域名别名生成',tag:'需后端'},
+ {id:'mail',cat:'site',icon:'✉',name:'临时邮箱',desc:'生成随机邮箱，实时收信看验证码',tag:'能收信'},
 ];
 var grid=document.getElementById('grid');
 function renderGrid(filter,cat){
@@ -406,6 +407,53 @@ function paintColor(hex){var rgb=hexToRgb(hex);document.getElementById('swatch')
 
 /* Temp mail alias */
 function genAlias(){var d=(document.getElementById('mailDomain').value.trim()||'example.com').replace(/^@+/,'').replace(/^https?:\/\//,'');var words=['dev','test','tmp','reg','box','mail','try','lab'];var rand=Math.random().toString(36).slice(2,8);document.getElementById('mailOut').textContent=pick(words)+'.'+rand+'@'+d+'\n（发到此地址的邮件需在域名后台开启 Catch-all 才会转进你的真实邮箱）'}
+/* Real temp mail via mail.tm (free, no key) */
+var mailToken='',mailAddr='',mailTimer=null;
+function mailSetStatus(t){document.getElementById('mailStatus').textContent='状态：'+t}
+function mailRand(n){var s='';var c='abcdefghijklmnopqrstuvwxyz0123456789';for(var i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
+async function genTempMail(){
+  mailSetStatus('正在生成邮箱…');
+  try{
+    var dr=await fetch('https://api.mail.tm/domains');var dj=await dr.json();
+    var domain=(dj['hydra:member']&&dj['hydra:member'][0]&&dj['hydra:member'][0].domain)||'euploading.com';
+    var addr='tmp'+mailRand(8)+'@'+domain;var pw=mailRand(12)+'A1!';
+    var cr=await fetch('https://api.mail.tm/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:addr,password:pw})});
+    if(!cr.ok)throw new Error('创建邮箱失败 '+cr.status);
+    var tr=await fetch('https://api.mail.tm/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:addr,password:pw})});
+    var tj=await tr.json();if(!tj.token)throw new Error('登录失败');
+    mailToken=tj.token;mailAddr=addr;
+    document.getElementById('mailAddr').value=addr;
+    document.getElementById('mailList').innerHTML='';document.getElementById('mailBody').innerHTML='';
+    mailSetStatus('已生成，等待来信…（发一封测试邮件到上面这个地址试试）');
+    refreshInbox();
+  }catch(e){mailSetStatus('生成失败：'+e.message+'。可能是 mail.tm 被墙或没联网，换个网络再试一次。')}
+}
+function copyTempMail(){var v=document.getElementById('mailAddr').value;if(!v){mailSetStatus('先点“生成邮箱”');return}copyText(v)}
+async function refreshInbox(){
+  if(!mailToken){mailSetStatus('先点“生成邮箱”');return}
+  try{
+    var r=await fetch('https://api.mail.tm/messages',{headers:{Authorization:'Bearer '+mailToken}});
+    var j=await r.json();var list=j['hydra:member']||[];
+    mailSetStatus(list.length?('收到 '+list.length+' 封，最后刷新 '+new Date().toLocaleTimeString()):('收件箱还是空的，最后刷新 '+new Date().toLocaleTimeString()+'。发信后等几秒再点刷新。'));
+    var box=document.getElementById('mailList');
+    if(!list.length){box.innerHTML='<p class="hint">还没有邮件。把上面那个地址填到你要注册的网站，等验证码发过来。</p>';return}
+    box.innerHTML=list.map(function(m){
+      return '<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;cursor:pointer" onclick="readMail(\''+m.id+'\')"><b>'+escHtml(m.subject||'(无主题)')+'</b><br><span style="color:var(--muted);font-size:13px">'+escHtml((m.from&&m.from.address)||'')+' · '+escHtml(m.createdAt||'')+'</span></div>';
+    }).join('');
+  }catch(e){mailSetStatus('刷新失败：'+e.message)}
+}
+function escHtml(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+async function readMail(id){
+  try{
+    var r=await fetch('https://api.mail.tm/messages/'+id,{headers:{Authorization:'Bearer '+mailToken}});
+    var m=await r.json();
+    var body=m.text||'';
+    if(!body&&m.html){var tmp=document.createElement('div');tmp.innerHTML=m.html;body=tmp.textContent||tmp.innerText||''}
+    document.getElementById('mailBody').innerHTML='<div style="border:1px solid var(--line);border-radius:10px;padding:12px"><b>'+escHtml(m.subject||'(无主题)')+'</b><br><span style="color:var(--muted);font-size:13px">'+escHtml((m.from&&m.from.address)||'')+'</span><pre class="out" style="white-space:pre-wrap;margin-top:10px">'+escHtml(body||'(这封邮件没有纯文本内容)')+'</pre></div>';
+    document.getElementById('mailBody').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(e){mailSetStatus('读信失败：'+e.message)}
+}
+function toggleMailAuto(on){if(mailTimer){clearInterval(mailTimer);mailTimer=null}if(on){mailTimer=setInterval(refreshInbox,15000)}}
 
 /* SEO */
 function seoCheck(){var title=document.getElementById('seoTitle').value.trim();var desc=document.getElementById('seoDesc').value.trim();var html=document.getElementById('seoHtml').value;
