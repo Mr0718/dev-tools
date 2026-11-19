@@ -1,7 +1,7 @@
 export async function onRequest(context) {
   const url = new URL(context.request.url);
   const path = url.pathname.replace(/^\/api\/?/, "");
-  const target = "https://api.mail.tm/" + path + url.search;
+  const target = "https://api.guerrillamail.com/" + path + url.search;
   const headers = new Headers();
   const auth = context.request.headers.get("Authorization");
   if (auth) headers.set("Authorization", auth);
