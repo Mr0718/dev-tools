@@ -409,6 +409,7 @@ function paintColor(hex){var rgb=hexToRgb(hex);document.getElementById('swatch')
 function genAlias(){var d=(document.getElementById('mailDomain').value.trim()||'example.com').replace(/^@+/,'').replace(/^https?:\/\//,'');var words=['dev','test','tmp','reg','box','mail','try','lab'];var rand=Math.random().toString(36).slice(2,8);document.getElementById('mailOut').textContent=pick(words)+'.'+rand+'@'+d+'\n（发到此地址的邮件需在域名后台开启 Catch-all 才会转进你的真实邮箱）'}
 /* Real temp mail via GuerrillaMail (free, no key; via this site's /api proxy, direct fallback) */
 var mailSid='',mailAddr='',mailTimer=null;
+function escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function mailSetStatus(t){document.getElementById('mailStatus').textContent='状态：'+t}
 function mailRand(n){var s='';var c='abcdefghijklmnopqrstuvwxyz0123456789';for(var i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
 async function mailFetch(path, opts){
