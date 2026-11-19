@@ -411,28 +411,35 @@ function genAlias(){var d=(document.getElementById('mailDomain').value.trim()||'
 var mailToken='',mailAddr='',mailTimer=null;
 function mailSetStatus(t){document.getElementById('mailStatus').textContent='状态：'+t}
 function mailRand(n){var s='';var c='abcdefghijklmnopqrstuvwxyz0123456789';for(var i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
+async function mailFetch(path, opts){
+  try{
+    const r = await fetch('/api'+path, opts);
+    if(r.status !== 404) return r;
+  }catch(e){}
+  return fetch('https://api.mail.tm'+path, opts);
+}
 async function genTempMail(){
   mailSetStatus('正在生成邮箱…');
   try{
-    var dr=await fetch('https://api.mail.tm/domains');var dj=await dr.json();
+    var dr=await mailFetch('/domains');var dj=await dr.json();
     var domain=(dj['hydra:member']&&dj['hydra:member'][0]&&dj['hydra:member'][0].domain)||'euploading.com';
     var addr='tmp'+mailRand(8)+'@'+domain;var pw=mailRand(12)+'A1!';
-    var cr=await fetch('https://api.mail.tm/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:addr,password:pw})});
+    var cr=await mailFetch('/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:addr,password:pw})});
     if(!cr.ok)throw new Error('创建邮箱失败 '+cr.status);
-    var tr=await fetch('https://api.mail.tm/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:addr,password:pw})});
+    var tr=await mailFetch('/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:addr,password:pw})});
     var tj=await tr.json();if(!tj.token)throw new Error('登录失败');
     mailToken=tj.token;mailAddr=addr;
     document.getElementById('mailAddr').value=addr;
     document.getElementById('mailList').innerHTML='';document.getElementById('mailBody').innerHTML='';
     mailSetStatus('已生成，等待来信…（发一封测试邮件到上面这个地址试试）');
     refreshInbox();
-  }catch(e){mailSetStatus('生成失败：'+e.message+'。可能是 mail.tm 被墙或没联网，换个网络再试一次。')}
+  }catch(e){mailSetStatus('生成失败：'+e.message+'。可能是 mail.tm 被墙或没联网，正在走本站代理重试，换个网络再试一次。')}
 }
 function copyTempMail(){var v=document.getElementById('mailAddr').value;if(!v){mailSetStatus('先点“生成邮箱”');return}copyText(v)}
 async function refreshInbox(){
   if(!mailToken){mailSetStatus('先点“生成邮箱”');return}
   try{
-    var r=await fetch('https://api.mail.tm/messages',{headers:{Authorization:'Bearer '+mailToken}});
+    var r=await mailFetch('/messages',{headers:{Authorization:'Bearer '+mailToken}});
     var j=await r.json();var list=j['hydra:member']||[];
     mailSetStatus(list.length?('收到 '+list.length+' 封，最后刷新 '+new Date().toLocaleTimeString()):('收件箱还是空的，最后刷新 '+new Date().toLocaleTimeString()+'。发信后等几秒再点刷新。'));
     var box=document.getElementById('mailList');
@@ -445,7 +452,7 @@ async function refreshInbox(){
 function escHtml(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 async function readMail(id){
   try{
-    var r=await fetch('https://api.mail.tm/messages/'+id,{headers:{Authorization:'Bearer '+mailToken}});
+    var r=await mailFetch('/messages/'+id,{headers:{Authorization:'Bearer '+mailToken}});
     var m=await r.json();
     var body=m.text||'';
     if(!body&&m.html){var tmp=document.createElement('div');tmp.innerHTML=m.html;body=tmp.textContent||tmp.innerText||''}
